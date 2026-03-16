@@ -253,7 +253,10 @@ def get_all_tracks(ipod_source):
         for j in range(1, playlist_tracks.Count + 1):
             try:
                 track = playlist_tracks.Item(j)
-                pid = track.PersistentID
+                try:
+                    pid = track.PersistentID
+                except Exception:
+                    pid = track.TrackDatabaseID
                 if pid not in seen:
                     seen.add(pid)
                     tracks.append(track)
