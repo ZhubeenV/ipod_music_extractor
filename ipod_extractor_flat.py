@@ -90,8 +90,7 @@ async def main():
     os.makedirs(OUTPUT_FOLDER, exist_ok=True)
 
     ok = 0
-    skipped = []  # (filename, reason)
-    failed  = []  # (device_path, reason)
+    failed = []  # (device_path, reason)
 
     for i, device_path in enumerate(music_files, 1):
         ext = os.path.splitext(device_path)[1]
@@ -113,13 +112,13 @@ async def main():
             album  = sanitize(get_tag(audio, "album",  "TALB") or "Unknown Album")
             title  = sanitize(get_tag(audio, "title",  "TIT2") or Path(device_path).stem)
 
-            filename  = f"{artist} - {album} - {title}{ext}"
-            dest_path = os.path.join(OUTPUT_FOLDER, filename)
-
-            if os.path.isfile(dest_path):
-                print(f"[{i}/{total}] SKIP (exists): {filename}")
-                skipped.append((filename, "already exists"))
-                continue
+            base_name = f"{artist} - {album} - {title}"
+            dest_path = os.path.join(OUTPUT_FOLDER, f"{base_name}{ext}")
+            counter = 1
+            while os.path.isfile(dest_path):
+                dest_path = os.path.join(OUTPUT_FOLDER, f"{base_name} ({counter}){ext}")
+                counter += 1
+            filename = os.path.basename(dest_path)
 
             shutil.move(tmp_path, dest_path)
             print(f"[{i}/{total}] OK: {filename}")
@@ -134,13 +133,7 @@ async def main():
     print("\n" + "=" * 60)
     print("Done!")
     print(f"  Copied:  {ok}")
-    print(f"  Skipped: {len(skipped)}")
     print(f"  Failed:  {len(failed)}")
-
-    if skipped:
-        print("\n── Skipped ──────────────────────────────────────────────")
-        for name, reason in skipped:
-            print(f"  {name}\n    reason: {reason}")
 
     if failed:
         print("\n── Failed ───────────────────────────────────────────────")
